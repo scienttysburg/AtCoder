@@ -1,0 +1,24 @@
+{
+  "name": "atcoder",
+  "version": "1.0.0",
+  "description": "This repository contains answers to AtCoder problems coded in each language. This is an unofficial answer. I may be wrong, so please understand.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/scienttysburg/AtCoder.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/scienttysburg/AtCoder/issues"
+  },
+  "homepage": "https://github.com/scienttysburg/AtCoder#readme",
+  "dependencies": {
+    "zenn-cli": "^0.4.7"
+  }
+}
