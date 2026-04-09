@@ -7,7 +7,7 @@
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
 ! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Version       : 1.0.2
 ! ==============================================================================
 program ABC450_E_Fortran_v1
   ! ============================================================================
@@ -21,7 +21,7 @@ program ABC450_E_Fortran_v1
   character(len=1)     :: Cq
   character(len=MAX_S) :: X, Y
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: lx, ly, K
+  integer(8) :: len_x, len_y, K
   integer(8) :: len_s(1:MAX_K)
   integer(8) :: cnt_s(1:MAX_K, 0:25)
   integer(8) :: pre_x(0:MAX_S, 0:25), pre_y(0:MAX_S, 0:25)
@@ -33,13 +33,13 @@ program ABC450_E_Fortran_v1
   ! === Input ==================================================================
   read(*,'(A)') X
   read(*,'(A)') Y
-  lx = int(len_trim(X), 8)
-  ly = int(len_trim(Y), 8)
+  len_x = int(len_trim(X), 8)
+  len_y = int(len_trim(Y), 8)
 
   ! === Initialization =========================================================
   ! Xの先頭からi文字目までに、各アルファベット(0~25)が何回出現するかを計算する
   pre_x(0, :) = 0_8
-  do i = 1_8, lx
+  do i = 1_8, len_x
     pre_x(i, :)      = pre_x(i-1, :)
     ci_idx           = ichar(X(i:i)) - ichar('a')
     pre_x(i, ci_idx) = pre_x(i, ci_idx) + 1_8
@@ -47,15 +47,15 @@ program ABC450_E_Fortran_v1
 
   ! Yについても同様に、各アルファベット(0~25)が何回出現するかを計算する
   pre_y(0, :) = 0_8
-  do i = 1_8, ly
+  do i = 1_8, len_y
     pre_y(i, :)      = pre_y(i-1, :)
     ci_idx           = ichar(Y(i:i)) - ichar('a')
     pre_y(i, ci_idx) = pre_y(i, ci_idx) + 1_8
   end do
 
   ! S_1 = X, S_2 = Y として、文字列の長さとアルファベット全体の出現回数を記録する
-  len_s(1) = lx;  cnt_s(1, :) = pre_x(lx, :)
-  len_s(2) = ly;  cnt_s(2, :) = pre_y(ly, :)
+  len_s(1) = len_x;  cnt_s(1, :) = pre_x(len_x, :)
+  len_s(2) = len_y;  cnt_s(2, :) = pre_y(len_y, :)
 
   ! 長さがINF（無限大の代わり）を超えるまで、各S_kの長さと文字数を事前計算する
   K = 2_8
@@ -63,7 +63,7 @@ program ABC450_E_Fortran_v1
     K = K + 1_8
 
     ! オーバーフロー防止: 予測される長さがINFを超える場合はINFで打ち切る
-    if(len_s(K-1_8) > INF - len_s(K-2_8)) then
+    if(len_s(K-1_8) > INF - len_s(K-2_8))then
       len_s(K) = INF
     else
       len_s(K) = len_s(K-1_8) + len_s(K-2_8)
@@ -112,18 +112,18 @@ function count_prefix(k_in, n_in, c) result(res)
 
   ! === Calculate ==============================================================
   do
-    if(nn <= 0_8) exit
+    if(nn <= 0_8)exit
 
     ! ベースケース到達: k=1(X) または k=2(Y) の場合は、累積和配列から一発で取得
-    if(kk == 1_8) then
+    if(kk == 1_8)then
       res = res + pre_x(nn, c)
       exit
-    else if(kk == 2_8) then
+    else if(kk == 2_8)then
       res = res + pre_y(nn, c)
       exit
     else
       ! 探索対象 (nn) が左半分 (S_{k-1}) のみで完結する場合
-      if(nn <= len_s(kk-1_8)) then
+      if(nn <= len_s(kk-1_8))then
         kk = kk - 1_8
 
       ! 探索対象が右半分 (S_{k-2}) にまではみ出す場合
