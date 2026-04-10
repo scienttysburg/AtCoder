@@ -7,7 +7,7 @@
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
 ! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Version       : 1.0.1
 ! ==============================================================================
 program ABC450_D_Fortran_v1
   ! ============================================================================
@@ -16,15 +16,15 @@ program ABC450_D_Fortran_v1
   integer(8), parameter :: MAX_N = 200000_8
   integer(8), parameter :: MAX_D = 2_8 * MAX_N
   ! --- Input Data -------------------------------------------------------------
-  integer(8) :: N, K
-  integer(8) :: A(1:MAX_N)
+  integer(8)            :: N, K
+  integer(8)            :: A(1:MAX_N)
   ! --- Output / Results -------------------------------------------------------
-  integer(8) :: ans
+  integer(8)            :: ans
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: dq(1:MAX_D)
-  integer(8) :: head, tail
+  integer(8)            :: dq(1:MAX_D)
+  integer(8)            :: head, tail
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i
+  integer(8)            :: i
   ! ============================================================================
 
   ! === Input ==================================================================

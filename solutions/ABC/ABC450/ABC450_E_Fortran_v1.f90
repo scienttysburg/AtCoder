@@ -7,7 +7,7 @@
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
 ! Last Modified : 2026/04/09
-! Version       : 1.0.2
+! Version       : 1.0.3
 ! ==============================================================================
 program ABC450_E_Fortran_v1
   ! ============================================================================
@@ -17,17 +17,17 @@ program ABC450_E_Fortran_v1
   integer(8), parameter :: MAX_S = 10000_8
   integer(8), parameter :: INF   = 2000000000000000000_8
   ! --- Input Data -------------------------------------------------------------
-  integer(8)           :: Q, L, R
-  character(len=1)     :: Cq
-  character(len=MAX_S) :: X, Y
+  integer(8)            :: Q, L, R
+  character(len=1)      :: Cq
+  character(len=MAX_S)  :: X, Y
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: len_x, len_y, K
-  integer(8) :: len_s(1:MAX_K)
-  integer(8) :: cnt_s(1:MAX_K, 0:25)
-  integer(8) :: pre_x(0:MAX_S, 0:25), pre_y(0:MAX_S, 0:25)
-  integer(8) :: ci_idx
+  integer(8)            :: len_x, len_y, K
+  integer(8)            :: len_s(1:MAX_K)
+  integer(8)            :: cnt_s(1:MAX_K, 0:25)
+  integer(8)            :: pre_x(0:MAX_S, 0:25), pre_y(0:MAX_S, 0:25)
+  integer(8)            :: ci_idx
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i
+  integer(8)            :: i
   ! ============================================================================
 
   ! === Input ==================================================================

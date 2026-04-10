@@ -7,7 +7,7 @@
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
 ! Last Modified : 2026/04/09
-! Version       : 1.0.1
+! Version       : 1.0.2
 ! ==============================================================================
 program ABC450_C_Fortran_v1
   ! ============================================================================
@@ -19,19 +19,19 @@ program ABC450_C_Fortran_v1
   integer(8), parameter :: dr(4) = (/ 0_8, 0_8, 1_8, -1_8 /)  ! delta row
   integer(8), parameter :: dc(4) = (/ 1_8, -1_8, 0_8, 0_8 /)  ! delta column
   ! --- Input Data -------------------------------------------------------------
-  integer(8)       :: H, W
-  character(len=1) :: grid(1:MAX_H, 1:MAX_W)
+  integer(8)            :: H, W
+  character(len=1)      :: grid(1:MAX_H, 1:MAX_W)
   ! --- Output / Results -------------------------------------------------------
-  integer(8) :: ans
+  integer(8)            :: ans
   ! --- Work Variables / Internal State ----------------------------------------
-  logical             :: visited(1:MAX_H, 1:MAX_W)
-  integer(8)          :: qi(1:MAX_Q), qj(1:MAX_Q)
-  integer(8)          :: qhead, qtail
-  logical             :: on_boundary
-  character(len=1000) :: line
-  integer(8)          :: ni, nj
+  logical               :: visited(1:MAX_H, 1:MAX_W)
+  integer(8)            :: qi(1:MAX_Q), qj(1:MAX_Q)
+  integer(8)            :: qhead, qtail
+  logical               :: on_boundary
+  character(len=1000)   :: line
+  integer(8)            :: ni, nj
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j, k
+  integer(8)            :: i, j, k
   ! ============================================================================
 
   ! === Input ==================================================================
