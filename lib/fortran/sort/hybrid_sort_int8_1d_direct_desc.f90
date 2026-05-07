@@ -1,31 +1,28 @@
 ! ==============================================================================
-! Subroutine    : hybrid_sort_real8_idx_desc (f90)
+! Subroutine    : hybrid_sort_int8_1d_direct_desc (f90)
 ! ------------------------------------------------------------------------------
 ! Description   : Hybrid Sort (Iterative Quicksort + Insertion Sort)
-!               : Index-based (indirect) sort, real(8), descending order
-!               : arr is unchanged; idx(k) gives the k-th largest position
+!               : Direct swap, integer(8), 1D array, descending order
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
-! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Last Modified : 2026/05/07
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine hybrid_sort_real8_idx_desc(arr, idx)
+subroutine hybrid_sort_int8_1d_direct_desc(arr)
   ! ============================================================================
   implicit none
   ! --- Constants / Parameters -------------------------------------------------
-  integer(8), parameter :: THRESHOLD = 32_8
+  integer(8), parameter     :: THRESHOLD = 32_8
   ! --- Input Data -------------------------------------------------------------
-  real(8),    intent(in)    :: arr(:)
-  integer(8), intent(inout) :: idx(:)
+  integer(8), intent(inout) :: arr(:)
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: stack(0:128, 2)
-  integer(8) :: top, low, high
-  real(8)    :: v0, v1, v2
-  real(8)    :: pivot, tmp_val
-  integer(8) :: tmp_idx
+  integer(8)                :: stack(0:128, 2)
+  integer(8)                :: top, low, high
+  integer(8)                :: v0, v1, v2, tmp_val
+  integer(8)                :: pivot
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j
+  integer(8)                :: i, j
   ! ============================================================================
 
   ! === Initialization =========================================================
@@ -41,14 +38,14 @@ subroutine hybrid_sort_real8_idx_desc(arr, idx)
 
     ! --- Switch to Insertion Sort for small partitions ------------------------
     if(high - low < THRESHOLD)then
-      call insertion_sort_real8_idx_desc(arr, idx, low, high)
+      call insertion_sort_int8_1d_direct_desc(arr, low, high)
       cycle
     end if
 
     ! --- Select Pivot (Median-of-3) -------------------------------------------
-    v0 = arr(idx(low))
-    v1 = arr(idx((low + high) / 2_8))
-    v2 = arr(idx(high))
+    v0 = arr(low)
+    v1 = arr((low + high) / 2_8)
+    v2 = arr(high)
 
     if(v0 > v1)then
       tmp_val = v0;  v0 = v1;  v1 = tmp_val
@@ -66,17 +63,17 @@ subroutine hybrid_sort_real8_idx_desc(arr, idx)
     j = high
 
     do
-      do while(arr(idx(i)) > pivot)
+      do while(arr(i) > pivot)
         i = i + 1_8
       end do
-      do while(arr(idx(j)) < pivot)
+      do while(arr(j) < pivot)
         j = j - 1_8
       end do
       if(i >= j)exit
 
-      tmp_idx = idx(i)
-      idx(i)  = idx(j)
-      idx(j)  = tmp_idx
+      tmp_val = arr(i)
+      arr(i)  = arr(j)
+      arr(j)  = tmp_val
       i       = i + 1_8
       j       = j - 1_8
     end do
@@ -110,47 +107,44 @@ subroutine hybrid_sort_real8_idx_desc(arr, idx)
     end if
   end do
 
-end subroutine hybrid_sort_real8_idx_desc
+end subroutine hybrid_sort_int8_1d_direct_desc
 
 ! ==============================================================================
-! Subroutine    : insertion_sort_real8_idx_desc (f90)
+! Subroutine    : insertion_sort_int8_1d_direct_desc (f90)
 ! ------------------------------------------------------------------------------
 ! Description   : Insertion Sort
-!               : Index-based (indirect) sort, real(8), descending order
+!               : Direct swap, integer(8), descending order
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
-! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Last Modified : 2026/05/07
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine insertion_sort_real8_idx_desc(arr, idx, low, high)
+subroutine insertion_sort_int8_1d_direct_desc(arr, low, high)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
-  real(8),    intent(in)    :: arr(:)
-  integer(8), intent(inout) :: idx(:)
+  integer(8), intent(inout) :: arr(:)
   integer(8), intent(in)    :: low, high
   ! --- Work Variables / Internal State ----------------------------------------
-  real(8)    :: key_val
-  integer(8) :: key_idx
+  integer(8)                :: key_val
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j
+  integer(8)                :: i, j
   ! ============================================================================
 
   ! === Calculate ==============================================================
   do i = low + 1_8, high
-    key_idx = idx(i)
-    key_val = arr(key_idx)
-    if(arr(idx(i - 1_8)) < key_val)then
-      idx(i) = idx(i - 1_8)
+    key_val = arr(i)
+    if(arr(i - 1_8) < key_val)then
+      arr(i) = arr(i - 1_8)
       j      = i - 1_8
       do while(j > low)
-        if(arr(idx(j - 1_8)) >= key_val)exit
-        idx(j) = idx(j - 1_8)
+        if(arr(j - 1_8) >= key_val)exit
+        arr(j) = arr(j - 1_8)
         j      = j - 1_8
       end do
-      idx(j) = key_idx
+      arr(j) = key_val
     end if
   end do
 
-end subroutine insertion_sort_real8_idx_desc
+end subroutine insertion_sort_int8_1d_direct_desc

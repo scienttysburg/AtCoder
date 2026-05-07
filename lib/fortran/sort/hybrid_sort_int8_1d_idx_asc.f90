@@ -1,28 +1,30 @@
 ! ==============================================================================
-! Subroutine    : hybrid_sort_real8_direct_desc (f90)
+! Subroutine    : hybrid_sort_int8_1d_idx_asc (f90)
 ! ------------------------------------------------------------------------------
 ! Description   : Hybrid Sort (Iterative Quicksort + Insertion Sort)
-!               : Direct swap, real(8), descending order
+!               : Index-based (indirect) sort, integer(8), 1D array, ascending order
+!               : arr is unchanged; idx(k) gives the k-th smallest position
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
-! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Last Modified : 2026/05/07
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine hybrid_sort_real8_direct_desc(arr)
+subroutine hybrid_sort_int8_1d_idx_asc(arr, idx)
   ! ============================================================================
   implicit none
   ! --- Constants / Parameters -------------------------------------------------
-  integer(8), parameter :: THRESHOLD = 32_8
+  integer(8), parameter     :: THRESHOLD = 32_8
   ! --- Input Data -------------------------------------------------------------
-  real(8), intent(inout) :: arr(:)
+  integer(8), intent(in)    :: arr(:)
+  integer(8), intent(inout) :: idx(:)
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: stack(0:128, 2)
-  integer(8) :: top, low, high
-  real(8)    :: v0, v1, v2
-  real(8)    :: pivot, temp
+  integer(8)                :: stack(0:128, 2)
+  integer(8)                :: top, low, high
+  integer(8)                :: v0, v1, v2, tmp_val
+  integer(8)                :: pivot, tmp_idx
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j
+  integer(8)                :: i, j
   ! ============================================================================
 
   ! === Initialization =========================================================
@@ -38,23 +40,23 @@ subroutine hybrid_sort_real8_direct_desc(arr)
 
     ! --- Switch to Insertion Sort for small partitions ------------------------
     if(high - low < THRESHOLD)then
-      call insertion_sort_real8_direct_desc(arr, low, high)
+      call insertion_sort_int8_1d_idx_asc(arr, idx, low, high)
       cycle
     end if
 
     ! --- Select Pivot (Median-of-3) -------------------------------------------
-    v0 = arr(low)
-    v1 = arr((low + high) / 2_8)
-    v2 = arr(high)
+    v0 = arr(idx(low))
+    v1 = arr(idx((low + high) / 2_8))
+    v2 = arr(idx(high))
 
     if(v0 > v1)then
-      temp = v0;  v0 = v1;  v1 = temp
+      tmp_val = v0;  v0 = v1;  v1 = tmp_val
     end if
     if(v0 > v2)then
-      temp = v0;  v0 = v2;  v2 = temp
+      tmp_val = v0;  v0 = v2;  v2 = tmp_val
     end if
     if(v1 > v2)then
-      temp = v1;  v1 = v2;  v2 = temp
+      tmp_val = v1;  v1 = v2;  v2 = tmp_val
     end if
     pivot = v1
 
@@ -63,19 +65,19 @@ subroutine hybrid_sort_real8_direct_desc(arr)
     j = high
 
     do
-      do while(arr(i) > pivot)
+      do while(arr(idx(i)) < pivot)
         i = i + 1_8
       end do
-      do while(arr(j) < pivot)
+      do while(arr(idx(j)) > pivot)
         j = j - 1_8
       end do
       if(i >= j)exit
 
-      temp   = arr(i)
-      arr(i) = arr(j)
-      arr(j) = temp
-      i      = i + 1_8
-      j      = j - 1_8
+      tmp_idx = idx(i)
+      idx(i)  = idx(j)
+      idx(j)  = tmp_idx
+      i       = i + 1_8
+      j       = j - 1_8
     end do
 
     ! --- Push Next Range To Stack ---------------------------------------------
@@ -107,44 +109,46 @@ subroutine hybrid_sort_real8_direct_desc(arr)
     end if
   end do
 
-end subroutine hybrid_sort_real8_direct_desc
+end subroutine hybrid_sort_int8_1d_idx_asc
 
 ! ==============================================================================
-! Subroutine    : insertion_sort_real8_direct_desc (f90)
+! Subroutine    : insertion_sort_int8_1d_idx_asc (f90)
 ! ------------------------------------------------------------------------------
 ! Description   : Insertion Sort
-!               : Direct swap, real(8), descending order
+!               : Index-based (indirect) sort, integer(8), ascending order
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
-! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Last Modified : 2026/05/07
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine insertion_sort_real8_direct_desc(arr, low, high)
+subroutine insertion_sort_int8_1d_idx_asc(arr, idx, low, high)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
-  real(8),    intent(inout) :: arr(:)
+  integer(8), intent(in)    :: arr(:)
+  integer(8), intent(inout) :: idx(:)
   integer(8), intent(in)    :: low, high
   ! --- Work Variables / Internal State ----------------------------------------
-  real(8)    :: key
+  integer(8)                :: key_val, key_idx
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j
+  integer(8)                :: i, j
   ! ============================================================================
 
   ! === Calculate ==============================================================
   do i = low + 1_8, high
-    key = arr(i)
-    if(arr(i - 1_8) < key)then
-      arr(i) = arr(i - 1_8)
+    key_idx = idx(i)
+    key_val = arr(key_idx)
+    if(arr(idx(i - 1_8)) > key_val)then
+      idx(i) = idx(i - 1_8)
       j      = i - 1_8
       do while(j > low)
-        if(arr(j - 1_8) >= key)exit
-        arr(j) = arr(j - 1_8)
+        if(arr(idx(j - 1_8)) <= key_val)exit
+        idx(j) = idx(j - 1_8)
         j      = j - 1_8
       end do
-      arr(j) = key
+      idx(j) = key_idx
     end if
   end do
 
-end subroutine insertion_sort_real8_direct_desc
+end subroutine insertion_sort_int8_1d_idx_asc

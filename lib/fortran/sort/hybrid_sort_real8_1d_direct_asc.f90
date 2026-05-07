@@ -1,28 +1,28 @@
 ! ==============================================================================
-! Subroutine    : hybrid_sort_int8_direct_asc (f90)
+! Subroutine    : hybrid_sort_real8_1d_direct_asc (f90)
 ! ------------------------------------------------------------------------------
 ! Description   : Hybrid Sort (Iterative Quicksort + Insertion Sort)
-!               : Direct swap, integer(8), ascending order
+!               : Direct swap, real(8), 1D array, ascending order
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
-! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Last Modified : 2026/05/07
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine hybrid_sort_int8_direct_asc(arr)
+subroutine hybrid_sort_real8_1d_direct_asc(arr)
   ! ============================================================================
   implicit none
   ! --- Constants / Parameters -------------------------------------------------
-  integer(8), parameter :: THRESHOLD = 32_8
+  integer(8), parameter  :: THRESHOLD = 32_8
   ! --- Input Data -------------------------------------------------------------
-  integer(8), intent(inout) :: arr(:)
+  real(8), intent(inout) :: arr(:)
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: stack(0:128, 2)
-  integer(8) :: top, low, high
-  integer(8) :: v0, v1, v2
-  integer(8) :: pivot, temp
+  integer(8)             :: stack(0:128, 2)
+  integer(8)             :: top, low, high
+  real(8)                :: v0, v1, v2, tmp_val
+  real(8)                :: pivot
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j
+  integer(8)             :: i, j
   ! ============================================================================
 
   ! === Initialization =========================================================
@@ -38,7 +38,7 @@ subroutine hybrid_sort_int8_direct_asc(arr)
 
     ! --- Switch to Insertion Sort for small partitions ------------------------
     if(high - low < THRESHOLD)then
-      call insertion_sort_int8_direct_asc(arr, low, high)
+      call insertion_sort_real8_1d_direct_asc(arr, low, high)
       cycle
     end if
 
@@ -48,13 +48,13 @@ subroutine hybrid_sort_int8_direct_asc(arr)
     v2 = arr(high)
 
     if(v0 > v1)then
-      temp = v0; v0 = v1; v1 = temp
+      tmp_val = v0;  v0 = v1;  v1 = tmp_val
     end if
     if(v0 > v2)then
-      temp = v0; v0 = v2; v2 = temp
+      tmp_val = v0;  v0 = v2;  v2 = tmp_val
     end if
     if(v1 > v2)then
-      temp = v1; v1 = v2; v2 = temp
+      tmp_val = v1;  v1 = v2;  v2 = tmp_val
     end if
     pivot = v1
 
@@ -71,11 +71,11 @@ subroutine hybrid_sort_int8_direct_asc(arr)
       end do
       if(i >= j)exit
 
-      temp   = arr(i)
-      arr(i) = arr(j)
-      arr(j) = temp
-      i      = i + 1_8
-      j      = j - 1_8
+      tmp_val = arr(i)
+      arr(i)  = arr(j)
+      arr(j)  = tmp_val
+      i       = i + 1_8
+      j       = j - 1_8
     end do
 
     ! --- Push Next Range To Stack ---------------------------------------------
@@ -107,44 +107,44 @@ subroutine hybrid_sort_int8_direct_asc(arr)
     end if
   end do
 
-end subroutine hybrid_sort_int8_direct_asc
+end subroutine hybrid_sort_real8_1d_direct_asc
 
 ! ==============================================================================
-! Subroutine    : insertion_sort_int8_direct_asc (f90)
+! Subroutine    : insertion_sort_real8_1d_direct_asc (f90)
 ! ------------------------------------------------------------------------------
 ! Description   : Insertion Sort
-!               : Direct swap, integer(8), ascending order
+!               : Direct swap, real(8), ascending order
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/04/09
-! Last Modified : 2026/04/09
-! Version       : 1.0.0
+! Last Modified : 2026/05/07
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine insertion_sort_int8_direct_asc(arr, low, high)
+subroutine insertion_sort_real8_1d_direct_asc(arr, low, high)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
-  integer(8), intent(inout) :: arr(:)
+  real(8),    intent(inout) :: arr(:)
   integer(8), intent(in)    :: low, high
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8) :: key
+  real(8)                   :: key_val
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8) :: i, j
+  integer(8)                :: i, j
   ! ============================================================================
 
   ! === Calculate ==============================================================
   do i = low + 1_8, high
-    key = arr(i)
-    if(arr(i - 1_8) > key)then
+    key_val = arr(i)
+    if(arr(i - 1_8) > key_val)then
       arr(i) = arr(i - 1_8)
       j      = i - 1_8
       do while(j > low)
-        if(arr(j - 1_8) <= key)exit
+        if(arr(j - 1_8) <= key_val)exit
         arr(j) = arr(j - 1_8)
         j      = j - 1_8
       end do
-      arr(j) = key
+      arr(j) = key_val
     end if
   end do
 
-end subroutine insertion_sort_int8_direct_asc
+end subroutine insertion_sort_real8_1d_direct_asc
