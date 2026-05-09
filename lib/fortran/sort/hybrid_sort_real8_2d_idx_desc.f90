@@ -7,31 +7,44 @@
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
-! Last Modified : 2026/05/07
-! Version       : 1.0.0
+! Last Modified : 2026/05/10
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine hybrid_sort_real8_2d_idx_desc(arr, idx)
+subroutine hybrid_sort_real8_2d_idx_desc(arr, idx, ord)
   ! ============================================================================
   implicit none
   ! --- Constants / Parameters -------------------------------------------------
-  integer(8), parameter     :: THRESHOLD = 32_8
+  integer(8), parameter            :: THRESHOLD = 32_8
   ! --- Input Data -------------------------------------------------------------
-  real(8),    intent(in)    :: arr(:, :)
-  integer(8), intent(inout) :: idx(:)
+  real(8),    intent(in)           :: arr(:, :)
+  integer(8), intent(inout)        :: idx(:)
+  integer(8), intent(in), optional :: ord(:)
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8)                :: stack(0:128, 2)
-  integer(8)                :: top, low, high
-  integer(8)                :: p0, p1, p2, tmp_p
-  real(8)                   :: pivot(int(size(arr, 2), 8))
-  integer(8)                :: tmp_idx
+  integer(8), allocatable          :: ord_used(:)
+  integer(8)                       :: stack(0:128, 2)
+  integer(8)                       :: top, low, high
+  integer(8)                       :: p0, p1, p2, tmp_p
+  real(8)                          :: pivot(int(size(arr, 2), 8))
+  integer(8)                       :: tmp_idx
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8)                :: i, j
+  integer(8)                       :: i, j
   ! ============================================================================
 
   ! === Initialization =========================================================
   top           = 1_8
   stack(top, 1) = 1_8
   stack(top, 2) = int(size(arr, 1), 8)
+
+  ! === Resolve Column Order ===================================================
+  if(present(ord))then
+    allocate(ord_used(1:size(ord)))
+    ord_used = ord
+  else
+    allocate(ord_used(1:int(size(arr, 2), 8)))
+    do i = 1_8, int(size(arr, 2), 8)
+      ord_used(i) = i
+    end do
+  end if
 
   ! === Loop Until Stack Is Empty ==============================================
   do while(top > 0_8)
@@ -41,7 +54,7 @@ subroutine hybrid_sort_real8_2d_idx_desc(arr, idx)
 
     ! --- Switch to Insertion Sort for small partitions ------------------------
     if(high - low < THRESHOLD)then
-      call insertion_sort_real8_2d_idx_desc(arr, idx, low, high)
+      call insertion_sort_real8_2d_idx_desc(arr, idx, low, high, ord_used)
       cycle
     end if
 
@@ -50,13 +63,13 @@ subroutine hybrid_sort_real8_2d_idx_desc(arr, idx)
     p1  = (low + high) / 2_8
     p2  = high
 
-    if(row_cmp_real8_2d(arr(idx(p0), :), arr(idx(p1), :)) > 0_8)then
+    if(row_cmp_real8_2d(arr(idx(p0), :), arr(idx(p1), :), ord_used) > 0_8)then
       tmp_p = p0;  p0 = p1;  p1 = tmp_p
     end if
-    if(row_cmp_real8_2d(arr(idx(p0), :), arr(idx(p2), :)) > 0_8)then
+    if(row_cmp_real8_2d(arr(idx(p0), :), arr(idx(p2), :), ord_used) > 0_8)then
       tmp_p = p0;  p0 = p2;  p2 = tmp_p
     end if
-    if(row_cmp_real8_2d(arr(idx(p1), :), arr(idx(p2), :)) > 0_8)then
+    if(row_cmp_real8_2d(arr(idx(p1), :), arr(idx(p2), :), ord_used) > 0_8)then
       tmp_p = p1;  p1 = p2;  p2 = tmp_p
     end if
     pivot = arr(idx(p1), :)
@@ -66,10 +79,10 @@ subroutine hybrid_sort_real8_2d_idx_desc(arr, idx)
     j = high
 
     do
-      do while(row_cmp_real8_2d(arr(idx(i), :), pivot) > 0_8)
+      do while(row_cmp_real8_2d(arr(idx(i), :), pivot, ord_used) > 0_8)
         i = i + 1_8
       end do
-      do while(row_cmp_real8_2d(arr(idx(j), :), pivot) < 0_8)
+      do while(row_cmp_real8_2d(arr(idx(j), :), pivot, ord_used) < 0_8)
         j = j - 1_8
       end do
       if(i >= j)exit
@@ -117,30 +130,35 @@ end subroutine hybrid_sort_real8_2d_idx_desc
 ! ------------------------------------------------------------------------------
 ! Description   : Lexicographic row comparison, real(8), 2D array
 !               : Returns -1 / 0 / 1 (a < b / a == b / a > b)
+!               : Columns are compared in the order specified by ord
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
-! Last Modified : 2026/05/07
-! Version       : 1.0.0
+! Last Modified : 2026/05/10
+! Version       : 1.1.0
 ! ==============================================================================
-function row_cmp_real8_2d(a, b) result(res)
+function row_cmp_real8_2d(a, b, ord) result(res)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
-  real(8), intent(in) :: a(:), b(:)
+  real(8),    intent(in) :: a(:), b(:)
+  integer(8), intent(in) :: ord(:)
   ! --- Output Data ------------------------------------------------------------
-  integer(8)          :: res
+  integer(8)             :: res
+  ! --- Work Variables / Internal State ----------------------------------------
+  integer(8)             :: o
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8)          :: i
+  integer(8)             :: i
   ! ============================================================================
 
   ! === Calculate ==============================================================
   res = 0_8
-  do i = 1_8, int(size(a), 8)
-    if(a(i) < b(i))then
+  do i = 1_8, int(size(ord), 8)
+    o = ord(i)
+    if(a(o) < b(o))then
       res = -1_8
       return
-    else if(a(i) > b(i))then
+    else if(a(o) > b(o))then
       res =  1_8
       return
     end if
@@ -156,16 +174,17 @@ end function row_cmp_real8_2d
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
-! Last Modified : 2026/05/07
-! Version       : 1.0.0
+! Last Modified : 2026/05/10
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine insertion_sort_real8_2d_idx_desc(arr, idx, low, high)
+subroutine insertion_sort_real8_2d_idx_desc(arr, idx, low, high, ord)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
   real(8),    intent(in)    :: arr(:, :)
   integer(8), intent(inout) :: idx(:)
   integer(8), intent(in)    :: low, high
+  integer(8), intent(in)    :: ord(:)
   ! --- Work Variables / Internal State ----------------------------------------
   real(8)                   :: key_row(int(size(arr, 2), 8))
   integer(8)                :: key_idx
@@ -177,11 +196,11 @@ subroutine insertion_sort_real8_2d_idx_desc(arr, idx, low, high)
   do i = low + 1_8, high
     key_idx = idx(i)
     key_row = arr(key_idx, :)
-    if(row_cmp_real8_2d(arr(idx(i - 1_8), :), key_row) < 0_8)then
+    if(row_cmp_real8_2d(arr(idx(i - 1_8), :), key_row, ord) < 0_8)then
       idx(i) = idx(i - 1_8)
       j      = i - 1_8
       do while(j > low)
-        if(row_cmp_real8_2d(arr(idx(j - 1_8), :), key_row) >= 0_8)exit
+        if(row_cmp_real8_2d(arr(idx(j - 1_8), :), key_row, ord) >= 0_8)exit
         idx(j) = idx(j - 1_8)
         j      = j - 1_8
       end do

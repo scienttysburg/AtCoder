@@ -3,34 +3,47 @@
 ! ------------------------------------------------------------------------------
 ! Description   : Hybrid Sort (Iterative Quicksort + Insertion Sort)
 !               : Direct swap, integer(8), 2D array, ascending order
-!               : Rows are sorted lexicographically (col 1 first, then col 2, ...)
+!               : Rows are sorted lexicographically by column order specified in ord
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
-! Last Modified : 2026/05/07
-! Version       : 1.0.0
+! Last Modified : 2026/05/10
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine hybrid_sort_int8_2d_direct_asc(arr)
+subroutine hybrid_sort_int8_2d_direct_asc(arr, ord)
   ! ============================================================================
   implicit none
   ! --- Constants / Parameters -------------------------------------------------
-  integer(8), parameter     :: THRESHOLD = 32_8
+  integer(8), parameter            :: THRESHOLD = 32_8
   ! --- Input Data -------------------------------------------------------------
-  integer(8), intent(inout) :: arr(:, :)
+  integer(8), intent(inout)        :: arr(:, :)
+  integer(8), intent(in), optional :: ord(:)
   ! --- Work Variables / Internal State ----------------------------------------
-  integer(8)                :: stack(0:128, 2)
-  integer(8)                :: top, low, high
-  integer(8)                :: p0, p1, p2, tmp_p
-  integer(8)                :: pivot(int(size(arr, 2), 8))
-  integer(8)                :: tmp_row(int(size(arr, 2), 8))
+  integer(8), allocatable          :: ord_used(:)
+  integer(8)                       :: stack(0:128, 2)
+  integer(8)                       :: top, low, high
+  integer(8)                       :: p0, p1, p2, tmp_p
+  integer(8)                       :: pivot(int(size(arr, 2), 8))
+  integer(8)                       :: tmp_row(int(size(arr, 2), 8))
   ! --- Loop Counters ----------------------------------------------------------
-  integer(8)                :: i, j
+  integer(8)                       :: i, j
   ! ============================================================================
 
   ! === Initialization =========================================================
   top           = 1_8
   stack(top, 1) = 1_8
   stack(top, 2) = int(size(arr, 1), 8)
+
+  ! === Resolve Column Order ===================================================
+  if(present(ord))then
+    allocate(ord_used(1:size(ord)))
+    ord_used = ord
+  else
+    allocate(ord_used(1:int(size(arr, 2), 8)))
+    do i = 1_8, int(size(arr, 2), 8)
+      ord_used(i) = i
+    end do
+  end if
 
   ! === Loop Until Stack Is Empty ==============================================
   do while(top > 0_8)
@@ -40,7 +53,7 @@ subroutine hybrid_sort_int8_2d_direct_asc(arr)
 
     ! --- Switch to Insertion Sort for small partitions ------------------------
     if(high - low < THRESHOLD)then
-      call insertion_sort_int8_2d_direct_asc(arr, low, high)
+      call insertion_sort_int8_2d_direct_asc(arr, low, high, ord_used)
       cycle
     end if
 
@@ -49,13 +62,13 @@ subroutine hybrid_sort_int8_2d_direct_asc(arr)
     p1  = (low + high) / 2_8
     p2  = high
 
-    if(row_cmp_int8_2d(arr(p0, :), arr(p1, :)) > 0_8)then
+    if(row_cmp_int8_2d(arr(p0, :), arr(p1, :), ord_used) > 0_8)then
       tmp_p = p0;  p0 = p1;  p1 = tmp_p
     end if
-    if(row_cmp_int8_2d(arr(p0, :), arr(p2, :)) > 0_8)then
+    if(row_cmp_int8_2d(arr(p0, :), arr(p2, :), ord_used) > 0_8)then
       tmp_p = p0;  p0 = p2;  p2 = tmp_p
     end if
-    if(row_cmp_int8_2d(arr(p1, :), arr(p2, :)) > 0_8)then
+    if(row_cmp_int8_2d(arr(p1, :), arr(p2, :), ord_used) > 0_8)then
       tmp_p = p1;  p1 = p2;  p2 = tmp_p
     end if
     pivot = arr(p1, :)
@@ -65,10 +78,10 @@ subroutine hybrid_sort_int8_2d_direct_asc(arr)
     j = high
 
     do
-      do while(row_cmp_int8_2d(arr(i, :), pivot) < 0_8)
+      do while(row_cmp_int8_2d(arr(i, :), pivot, ord_used) < 0_8)
         i = i + 1_8
       end do
-      do while(row_cmp_int8_2d(arr(j, :), pivot) > 0_8)
+      do while(row_cmp_int8_2d(arr(j, :), pivot, ord_used) > 0_8)
         j = j - 1_8
       end do
       if(i >= j)exit
@@ -116,30 +129,34 @@ end subroutine hybrid_sort_int8_2d_direct_asc
 ! ------------------------------------------------------------------------------
 ! Description   : Lexicographic row comparison, integer(8), 2D array
 !               : Returns -1 / 0 / 1 (a < b / a == b / a > b)
+!               : Columns are compared in the order specified by ord
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
-! Last Modified : 2026/05/07
-! Version       : 1.0.0
+! Last Modified : 2026/05/10
+! Version       : 1.1.0
 ! ==============================================================================
-function row_cmp_int8_2d(a, b) result(res)
+function row_cmp_int8_2d(a, b, ord) result(res)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
-  integer(8), intent(in) :: a(:), b(:)
+  integer(8), intent(in) :: a(:), b(:), ord(:)
   ! --- Output Data ------------------------------------------------------------
   integer(8)             :: res
+  ! --- Work Variables / Internal State ----------------------------------------
+  integer(8)             :: o
   ! --- Loop Counters ----------------------------------------------------------
   integer(8)             :: i
   ! ============================================================================
 
   ! === Calculate ==============================================================
   res = 0_8
-  do i = 1_8, int(size(a), 8)
-    if(a(i) < b(i))then
+  do i = 1_8, int(size(ord), 8)
+    o = ord(i)
+    if(a(o) < b(o))then
       res = -1_8
       return
-    else if(a(i) > b(i))then
+    else if(a(o) > b(o))then
       res =  1_8
       return
     end if
@@ -155,15 +172,16 @@ end function row_cmp_int8_2d
 !
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
-! Last Modified : 2026/05/07
-! Version       : 1.0.0
+! Last Modified : 2026/05/10
+! Version       : 1.1.0
 ! ==============================================================================
-subroutine insertion_sort_int8_2d_direct_asc(arr, low, high)
+subroutine insertion_sort_int8_2d_direct_asc(arr, low, high, ord)
   ! ============================================================================
   implicit none
   ! --- Input Data -------------------------------------------------------------
   integer(8), intent(inout) :: arr(:, :)
   integer(8), intent(in)    :: low, high
+  integer(8), intent(in)    :: ord(:)
   ! --- Work Variables / Internal State ----------------------------------------
   integer(8)                :: key_row(int(size(arr, 2), 8))
   ! --- Loop Counters ----------------------------------------------------------
@@ -173,11 +191,11 @@ subroutine insertion_sort_int8_2d_direct_asc(arr, low, high)
   ! === Calculate ==============================================================
   do i = low + 1_8, high
     key_row = arr(i, :)
-    if(row_cmp_int8_2d(arr(i - 1_8, :), key_row) > 0_8)then
+    if(row_cmp_int8_2d(arr(i - 1_8, :), key_row, ord) > 0_8)then
       arr(i, :) = arr(i - 1_8, :)
       j         = i - 1_8
       do while(j > low)
-        if(row_cmp_int8_2d(arr(j - 1_8, :), key_row) <= 0_8)exit
+        if(row_cmp_int8_2d(arr(j - 1_8, :), key_row, ord) <= 0_8)exit
         arr(j, :) = arr(j - 1_8, :)
         j         = j - 1_8
       end do
