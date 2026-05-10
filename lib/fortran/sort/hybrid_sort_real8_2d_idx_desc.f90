@@ -8,7 +8,7 @@
 ! Author        : Scienttysburg
 ! Creation Date : 2026/05/07
 ! Last Modified : 2026/05/10
-! Version       : 1.1.0
+! Version       : 1.1.1
 ! ==============================================================================
 subroutine hybrid_sort_real8_2d_idx_desc(arr, idx, ord)
   ! ============================================================================
@@ -22,7 +22,7 @@ subroutine hybrid_sort_real8_2d_idx_desc(arr, idx, ord)
   ! --- Work Variables / Internal State ----------------------------------------
   integer(8), allocatable          :: ord_used(:)
   integer(8)                       :: stack(0:128, 2)
-  integer(8)                       :: top, low, high
+  integer(8)                       :: top, low, high, col
   integer(8)                       :: p0, p1, p2, tmp_p
   real(8)                          :: pivot(int(size(arr, 2), 8))
   integer(8)                       :: tmp_idx
@@ -37,11 +37,12 @@ subroutine hybrid_sort_real8_2d_idx_desc(arr, idx, ord)
 
   ! === Resolve Column Order ===================================================
   if(present(ord))then
-    allocate(ord_used(1:size(ord)))
-    ord_used = ord
+    allocate(ord_used(1:int(size(ord), 8)))
+    ord_used(:) = ord(:)
   else
-    allocate(ord_used(1:int(size(arr, 2), 8)))
-    do i = 1_8, int(size(arr, 2), 8)
+    col = int(size(arr, 2), 8)
+    allocate(ord_used(1:col))
+    do i = 1_8, col
       ord_used(i) = i
     end do
   end if
